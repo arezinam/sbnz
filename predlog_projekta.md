@@ -135,8 +135,6 @@ Cilj projekta je kreiranje sistema koji:
        => Fokus rizik prisutan
    ```
 
-**Lančani tok:**
-Cilj → pitanje 3 → pitanje 2 → pitanje 1 → inputi → potvrda simptoma
 
 **Output backward chaininga:**
 
@@ -209,3 +207,4 @@ day_type = radni dan
   * night\_hours >2h više puta → zadovoljen
 * Zaključak: Burnout rizik prisutan
 * Preventivne preporuke: reorganizacija zadataka, planirani radni blokovi, razgovor sa mentorom
+
