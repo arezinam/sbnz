@@ -1,5 +1,8 @@
 package com.ftn.sbnz.service;
 
+import com.ftn.sbnz.model.models.SelfReportEvent;
+import com.ftn.sbnz.model.models.StressLevel;
+import com.ftn.sbnz.model.models.StressScore;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 import org.slf4j.Logger;
@@ -7,7 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.ftn.sbnz.model.events.Item;
+import java.time.Instant;
+import java.util.UUID;
 
 
 @Service
@@ -23,11 +27,23 @@ public class SampleAppService {
 		this.kieContainer = kieContainer;
 	}
 
-	public Item getClassifiedItem(Item i) {
-		KieSession kieSession = kieContainer.newKieSession();
-		kieSession.insert(i);
+	public StressScore getClassifiedItem() {
+		KieSession kieSession = kieContainer.newKieSession("fwdKsession");
+
+        StressScore score = new StressScore();
+        UUID uuid = UUID.randomUUID();
+        score.setUserId(uuid);
+        score.setScore(0);
+        score.setLevel(StressLevel.LOW);
+		kieSession.insert(score);
+        SelfReportEvent sr = new SelfReportEvent(uuid, 20, Instant.now());
+        kieSession.insert(sr);
 		kieSession.fireAllRules();
 		kieSession.dispose();
-		return i;
+		return score;
 	}
+
+//    public String getClassifiedItem() {
+//        return "Success";
+//    }
 }

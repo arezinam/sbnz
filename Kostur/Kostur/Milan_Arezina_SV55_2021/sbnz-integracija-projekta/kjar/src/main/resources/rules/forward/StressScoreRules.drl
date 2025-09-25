@@ -7,7 +7,6 @@ import com.ftn.sbnz.model.models.StressScore;
 import com.ftn.sbnz.model.models.StressLevel;
 import java.util.List;
 
-// --- Declare events for STREAM mode ---
 declare SelfReportEvent
     @role(event)
 end
@@ -16,80 +15,103 @@ declare TaskEvent
     @role(event)
 end
 
-// --- Night and weekend points ---
-rule "Score from night and weekend"
+rule "Reset StressScore"
+salience 1000
 when
-    $ua : UserActivity($userId : userId)
-    $score : StressScore(userId == $userId)
+    $s : StressScore()
 then
-    double points = 0;
-    if($ua.isNight()) points += 2;
-    if($ua.isWeekend()) points += 2;
+    $s.setScore(0);
+    update($s);
+end
 
+// --- Night points ---
+rule "Score from night"
+when
+    $ua : UserActivity(night == true)
+    $score : StressScore()
+then
     modify($score) {
-        setScore($score.getScore() + points);
+        setScore($score.getScore() + 2);
     }
 end
 
-// --- Multitasking points ---
-rule "Score from multitasking"
+// --- Weekend points ---
+rule "Score from weekend"
 when
-    $ua : UserActivity($userId : userId)
-    $score : StressScore(userId == $userId)
-    $tasks : List() from collect(
-        TaskEvent(userId == $userId, endTime == null)
-    )
+    $ua : UserActivity(weekend == true)
+    $score : StressScore()
 then
-    int activeTasks = $tasks.size();
-    double points = 0;
-
-    if(activeTasks == 2) {
-        points = 1;
-    } else if(activeTasks == 3) {
-        points = 3;
-    } else if(activeTasks > 3) {
-        points = 5;
-    }
-
     modify($score) {
-        setScore($score.getScore() + points);
+        setScore($score.getScore() + 2);
     }
 end
+
+
+// --- Multitasking: 2 active tasks ---
+rule "Score from multitasking 2 tasks"
+when
+    $score : StressScore()
+    $tasks : List() from collect(TaskEvent(endTime == null, this != null))
+    eval($tasks.size() == 2)
+then
+    modify($score) {
+        setScore($score.getScore() + 1);
+    }
+end
+
+// --- Multitasking: 3 active tasks ---
+rule "Score from multitasking 3 tasks"
+when
+    $score : StressScore()
+    $tasks : List() from collect(TaskEvent(endTime == null, this != null))
+    eval($tasks.size() == 3)
+then
+    modify($score) {
+        setScore($score.getScore() + 3);
+    }
+end
+
+// --- Multitasking: more than 3 active tasks ---
+rule "Score from multitasking more than 3 tasks"
+when
+    $score : StressScore()
+    $tasks : List() from collect(TaskEvent(endTime == null, this != null))
+    eval($tasks.size() > 3)
+then
+    modify($score) {
+        setScore($score.getScore() + 5);
+    }
+end
+
 
 // --- Work intensity points ---
 rule "Score from work intensity"
 when
     $score : StressScore()
-    $tasks : List() from collect(
-        TaskEvent(endTime == null)
+    $totalIntensity : Double() from accumulate(
+        TaskEvent(endTime == null, $intensity : intensity),
+        sum($intensity)
     )
 then
-    double totalIntensity = 0;
-    for(Object obj : $tasks) {
-        TaskEvent task = (TaskEvent) obj;
-        totalIntensity += task.getIntensity();
-    }
-
     modify($score) {
-        setScore($score.getScore() + totalIntensity);
+        setScore($score.getScore() + $totalIntensity);
     }
 end
 
-// --- Self-report points (last 8h) ---
+
 rule "Score from self report"
 when
     $score : StressScore()
-    $sr : List() from collect(
-        SelfReportEvent( $ts : timestampMillis ) over window:time(8h)
-    )
+    $events : List() from collect(SelfReportEvent() over window:time(8h))
+    eval(!$events.isEmpty())
+    $latest : SelfReportEvent() from $events.get($events.size() - 1)
 then
-    if(!$sr.isEmpty()) {
-        SelfReportEvent latest = (SelfReportEvent) $sr.get($sr.size() - 1);
-        modify($score) {
-            setScore($score.getScore() + latest.getStressLevel());
-        }
+    modify($score) {
+        setScore($score.getScore() + $latest.getStressLevel());
     }
 end
+
+
 
 // --- Update stress level ---
 rule "Update stress level"

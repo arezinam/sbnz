@@ -11,6 +11,6 @@ import java.util.UUID;
 @ToString
 public class UserActivity {
     private UUID userId;
-    private boolean night;
-    private boolean weekend;
+    private boolean isNight;
+    private boolean isWeekend;
 }
