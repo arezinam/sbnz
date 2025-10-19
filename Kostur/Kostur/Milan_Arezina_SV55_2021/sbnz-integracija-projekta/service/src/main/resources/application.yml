@@ -6,3 +6,7 @@ frontend:
   url: http://localhost:5173
 server:
   port: ${PORT:8080}
+  servlet:
+    session:
+      cookie:
+        secure: true
