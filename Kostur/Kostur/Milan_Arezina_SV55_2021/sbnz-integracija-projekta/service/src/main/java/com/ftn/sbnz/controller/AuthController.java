@@ -1,8 +1,5 @@
 package com.ftn.sbnz.controller;
 
-import com.atlassian.sal.api.net.ResponseStatusException;
-import com.ftn.sbnz.model.TokenResponse;
-import com.ftn.sbnz.model.AccessibleResource;
 import com.ftn.sbnz.service.AtlassianAuthService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -10,12 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 

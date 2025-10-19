@@ -1,10 +1,14 @@
 package com.ftn.sbnz.controller;
 
+import com.ftn.sbnz.DTO.TaskDTO;
 import com.ftn.sbnz.service.JiraService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
+
 
 import javax.servlet.http.HttpSession;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -18,15 +22,17 @@ public class TaskController {
     }
 
     @GetMapping("/my")
-    public Mono<Map<String, Object>> getMyTasks(HttpSession session) {
+    public ResponseEntity<?> myTasks(HttpSession session) {
         String accessToken = (String) session.getAttribute("jiraAccessToken");
         String cloudId = (String) session.getAttribute("jiraCloudId");
 
         if (accessToken == null || cloudId == null) {
-            throw new RuntimeException("Not logged in. Please go to /auth/login first.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Not logged in"));
         }
 
-        return jiraService.getMyIssues(accessToken, cloudId);
+        List<TaskDTO> tasks = jiraService.fetchMyTasks(accessToken, cloudId);
+        return ResponseEntity.ok(tasks);
     }
 
 }

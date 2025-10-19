@@ -14,7 +14,7 @@
 	<name>service</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
-		<java.version>11</java.version>
+		<java.version>17</java.version>
 		<drools.version>7.74.0.Final</drools.version>
 	</properties>
 	<dependencies>
